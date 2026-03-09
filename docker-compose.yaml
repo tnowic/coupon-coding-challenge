@@ -1,0 +1,31 @@
+services:
+  database:
+    build:
+      context: ./database
+    container_name: coupon-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT}:5432"
+
+  backend:
+    build:
+      context: ./service
+    container_name: coupon-service
+    ports:
+      - "${SERVER_PORT}:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://database:${POSTGRES_PORT}/${POSTGRES_DB}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - SERVER_PORT=${SERVER_PORT}
+      - java.net.preferIPv4Stack=true
+    depends_on:
+      - database
+
+volumes:
+  pgdata:

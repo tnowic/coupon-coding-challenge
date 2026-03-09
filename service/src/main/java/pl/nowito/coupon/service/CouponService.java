@@ -1,0 +1,151 @@
+package pl.nowito.coupon.service;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import pl.nowito.coupon.converter.CouponDataConverter;
+import pl.nowito.coupon.converter.CreateCouponRequestConverter;
+import pl.nowito.coupon.dto.ApplyCouponRequest;
+import pl.nowito.coupon.dto.CouponData;
+import pl.nowito.coupon.dto.CreateCouponRequest;
+import pl.nowito.coupon.error.CouponBusinessRuleViolationException;
+import pl.nowito.coupon.error.CouponNotFoundException;
+import pl.nowito.coupon.error.DuplicateCouponCodeException;
+import pl.nowito.coupon.model.Coupon;
+import pl.nowito.coupon.model.CouponUsage;
+import pl.nowito.coupon.model.Customer;
+import pl.nowito.coupon.repository.CouponRepository;
+import pl.nowito.coupon.repository.CouponUsageRepository;
+import pl.nowito.coupon.repository.CustomerRepository;
+import pl.nowito.coupon.user.UserContext;
+
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.Optional;
+
+import static java.lang.String.format;
+
+@Service
+@Transactional(readOnly = true)
+public class CouponService {
+
+    private static final Logger LOG = LoggerFactory.getLogger(CouponService.class);
+
+    private static final String SORT_BY_PROPERTY_CODE = "code";
+
+    private final CouponRepository couponRepository;
+    private final CustomerRepository customerRepository;
+    private final CouponUsageRepository couponUsageRepository;
+    private final UserContext userContext;
+
+    public CouponService(CouponRepository couponRepository,
+                         CustomerRepository customerRepository,
+                         CouponUsageRepository couponUsageRepository,
+                         UserContext userContext) {
+        this.couponRepository = couponRepository;
+        this.customerRepository = customerRepository;
+        this.couponUsageRepository = couponUsageRepository;
+        this.userContext = userContext;
+    }
+
+    @Transactional
+    public CouponData save(CreateCouponRequest createCouponRequest) {
+        Optional<Coupon> couponOptional = couponRepository.findByCodeIgnoreCase(createCouponRequest.code());
+        if (couponOptional.isPresent()) {
+            String couponCodeInUse = couponOptional.get().getCode();
+            LOG.warn("Coupon code: {} already in use", couponCodeInUse);
+            throw new DuplicateCouponCodeException(couponCodeInUse);
+        }
+        Coupon newCoupon = CreateCouponRequestConverter.convertToNewEntity(createCouponRequest);
+        return CouponDataConverter.convertToDto(couponRepository.save(newCoupon));
+    }
+
+    public CouponData findByCode(String code) {
+        Optional<Coupon> couponOptional = couponRepository.findByCodeIgnoreCase(code);
+        if (couponOptional.isEmpty()) {
+            LOG.warn("Coupon with code: {} not found", code);
+        }
+        return couponOptional.map(CouponDataConverter::convertToDto).orElseThrow(() -> new CouponNotFoundException(code));
+    }
+
+    public Page<CouponData> findAll(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size).withSort(Sort.by(Sort.Direction.ASC, SORT_BY_PROPERTY_CODE));
+        Page<Coupon> pageCoupon = couponRepository.findAll(pageable);
+        return pageCoupon.map(CouponDataConverter::convertToDto);
+    }
+
+    @Transactional
+    public CouponData applyCoupon(String code, ApplyCouponRequest applyCouponRequest) {
+        Optional<Coupon> couponOptional = couponRepository.findByCodeIgnoreCase(code);
+        if (couponOptional.isPresent()) {
+            Coupon coupon = couponOptional.get();
+            verifRequestCountryOrigin(coupon, userContext);
+            verifyCouponCounter(coupon);
+            if (Boolean.TRUE.equals(coupon.isForRegUsers())) {
+                Customer customer = getCustomer(applyCouponRequest, coupon);
+                verifyCouponUsage(coupon, customer);
+
+                CouponUsage couponUsage = new CouponUsage();
+                couponUsage.setCoupon(coupon);
+                couponUsage.setCustomer(customer);
+                couponUsage.setCreateTimestamp(Timestamp.from(LocalDateTime.now().toInstant(ZoneOffset.UTC)));
+                couponUsageRepository.save(couponUsage);
+            }
+            coupon.setCounter(coupon.getCounter() + 1);
+            return CouponDataConverter.convertToDto(couponRepository.save(coupon));
+        } else {
+            LOG.warn("Coupon with code: {} not found", code);
+            throw new CouponNotFoundException(code);
+        }
+    }
+
+    Customer getCustomer(ApplyCouponRequest applyCouponRequest, Coupon coupon) {
+        if (applyCouponRequest == null) {
+            throw new CouponBusinessRuleViolationException(
+                    format("Coupon code: %s is available only for registered customers", coupon.getCode()),
+                    "Please provide customer id in request body");
+        }
+        Optional<Customer> customerOptional = customerRepository.findById(applyCouponRequest.customerId());
+        if (customerOptional.isEmpty()) {
+            throw new CouponBusinessRuleViolationException(
+                    format("Registered customer id: %d not found", applyCouponRequest.customerId()),
+                    "Please provide valid customer id in request body");
+        }
+        return customerOptional.get();
+    }
+
+    void verifyCouponUsage(Coupon coupon, Customer customer) {
+        if (couponUsageRepository.existsByCouponIdAndCustomerId(coupon.getId(), customer.getId())) {
+            throw new CouponBusinessRuleViolationException(format("Customer with id: %s has already applied coupon code: %s", customer.getId(), coupon.getCode()),
+                    "Please use other coupon code or choose different customer id");
+        }
+    }
+
+    void verifyCouponCounter(Coupon coupon) {
+        if (coupon.getCounter().equals(coupon.getMaxCounter())) {
+            throw new CouponBusinessRuleViolationException(
+                    format("A counter of coupon code: %s reached its maximum possible value: %s", coupon.getCode(), coupon.getCounter()),
+                    "Please use another coupon code to apply");
+        }
+    }
+
+    private void verifRequestCountryOrigin(Coupon coupon, UserContext userContext) {
+        if (coupon.getCountryCode() != null) {
+            String requestOriginCountryCode = userContext.getRequestOriginCountryCode().orElseThrow(() -> new CouponBusinessRuleViolationException(
+                    format("Request origin country could not be determined when applying to coupon code: %s restricted to country code: %s", coupon.getCode(), coupon.getCountryCode()),
+                    "Please verify whether valid public ip is being used in your http request"));
+            if (!coupon.getCountryCode().equalsIgnoreCase(requestOriginCountryCode)) {
+                throw new CouponBusinessRuleViolationException(format("Request origin country code: %s differs from coupon restricted country code: %s when applying to coupon code: %s",
+                        requestOriginCountryCode, coupon.getCountryCode(), coupon.getCode()),
+                        "Your public ip address must be in a country that this coupon is restricted to");
+            }
+        }
+    }
+}
+

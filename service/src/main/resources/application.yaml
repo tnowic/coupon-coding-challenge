@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: coupon-service
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        ddl-auto: none
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?currentSchema=coupons
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    initialization-mode: none
+    continue-on-error: false
+    testWhileIdle: true
+    validationQuery: SELECT 1
+    driver-class-name: org.postgresql.Driver
+
+hibernate:
+  globally_quoted_identifiers: true
+
+server:
+  port: ${SERVER_PORT}
+  error:
+    include-binding-errors: always
+    include-message: always
+
+springdoc:
+  swagger-ui:
+    enabled: true
+
+logging:
+  level:
+    pl:
+      nowito:
+        coupon: DEBUG
+    org:
+      hibernate:
+        orm:
+          jdbc:
+            bind: trace
+
+ip-api:
+  url: http://ip-api.com/json
