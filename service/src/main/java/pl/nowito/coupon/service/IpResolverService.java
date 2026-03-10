@@ -33,14 +33,14 @@ public class IpResolverService {
         this.objectMapper = objectMapper;
         this.restTemplate = restTemplate;
         this.ipApiUrl = ipApiUrl;
+        LOG.info("IpResolverService ip api url: {}", ipApiUrl);
     }
 
     public Optional<String> getCountryCodeForIpAddr(String ipAddr) {
         String actualIpApiUrl = String.format("%s/%s?fields=%s,%s", ipApiUrl, ipAddr, COUNTRY_CODE_FIELD_NAME, QUERY_FIELD_NAME);
         LOG.debug("Calling ip-api service url: {}", actualIpApiUrl);
-
-        ResponseEntity<String> response = restTemplate.getForEntity(actualIpApiUrl, String.class);
         try {
+            ResponseEntity<String> response = restTemplate.getForEntity(actualIpApiUrl, String.class);
             Map<String, String> responseAsMap = objectMapper.readValue(response.getBody(), MAP_TYPE_REFERENCE);
             String countryCode = responseAsMap.get(COUNTRY_CODE_FIELD_NAME);
             String publicIpAddr = responseAsMap.get(QUERY_FIELD_NAME);

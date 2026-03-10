@@ -35,13 +35,8 @@ public class Coupon {
     @Column(name = "version")
     private Long version;
 
-
     public Long getId() {
         return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getCode() {
@@ -91,6 +86,4 @@ public class Coupon {
     public void setForRegUsers(Boolean forRegUsers) {
         isForRegUsers = forRegUsers;
     }
-    public Long getVersion() { return version; }
-    public void setVersion(Long version) { this.version = version; }
 }

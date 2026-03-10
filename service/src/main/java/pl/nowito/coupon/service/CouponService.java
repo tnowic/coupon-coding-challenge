@@ -6,6 +6,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.nowito.coupon.converter.CouponDataConverter;
@@ -29,7 +32,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Optional;
 
-import static java.lang.String.format;
+import static pl.nowito.coupon.error.support.ErrorMessageSupportEnum.*;
 
 @Service
 @Transactional(readOnly = true)
@@ -69,7 +72,7 @@ public class CouponService {
     public CouponData findByCode(String code) {
         Optional<Coupon> couponOptional = couponRepository.findByCodeIgnoreCase(code);
         if (couponOptional.isEmpty()) {
-            LOG.warn("Coupon with code: {} not found", code);
+            LOG.warn("Coupon code: {} not found", code);
         }
         return couponOptional.map(CouponDataConverter::convertToDto).orElseThrow(() -> new CouponNotFoundException(code));
     }
@@ -80,6 +83,10 @@ public class CouponService {
         return pageCoupon.map(CouponDataConverter::convertToDto);
     }
 
+    @Retryable(retryFor = ObjectOptimisticLockingFailureException.class,
+            maxAttemptsExpression = "${retry.maxAttempts:3}",
+            backoff = @Backoff(delayExpression = "${retry.maxDelay:500}")
+    )
     @Transactional
     public CouponData applyCoupon(String code, ApplyCouponRequest applyCouponRequest) {
         Optional<Coupon> couponOptional = couponRepository.findByCodeIgnoreCase(code);
@@ -100,50 +107,41 @@ public class CouponService {
             coupon.setCounter(coupon.getCounter() + 1);
             return CouponDataConverter.convertToDto(couponRepository.save(coupon));
         } else {
-            LOG.warn("Coupon with code: {} not found", code);
+            LOG.warn("Coupon code: {} not found", code);
             throw new CouponNotFoundException(code);
         }
     }
 
     Customer getCustomer(ApplyCouponRequest applyCouponRequest, Coupon coupon) {
         if (applyCouponRequest == null) {
-            throw new CouponBusinessRuleViolationException(
-                    format("Coupon code: %s is available only for registered customers", coupon.getCode()),
-                    "Please provide customer id in request body");
+            throw new CouponBusinessRuleViolationException(ERROR_COUPON_FOR_REGISTERED_USERS_ONLY, coupon.getCode());
         }
         Optional<Customer> customerOptional = customerRepository.findById(applyCouponRequest.customerId());
         if (customerOptional.isEmpty()) {
-            throw new CouponBusinessRuleViolationException(
-                    format("Registered customer id: %d not found", applyCouponRequest.customerId()),
-                    "Please provide valid customer id in request body");
+            throw new CouponBusinessRuleViolationException(ERROR_REGISTERED_CUSTOMER_NOT_FOUND, applyCouponRequest.customerId());
         }
         return customerOptional.get();
     }
 
     void verifyCouponUsage(Coupon coupon, Customer customer) {
         if (couponUsageRepository.existsByCouponIdAndCustomerId(coupon.getId(), customer.getId())) {
-            throw new CouponBusinessRuleViolationException(format("Customer with id: %s has already applied coupon code: %s", customer.getId(), coupon.getCode()),
-                    "Please use other coupon code or choose different customer id");
+            throw new CouponBusinessRuleViolationException(ERROR_CUSTOMER_ALREADY_APPLIED_FOR_COUPON, customer.getId(), coupon.getCode());
         }
     }
 
     void verifyCouponCounter(Coupon coupon) {
         if (coupon.getCounter().equals(coupon.getMaxCounter())) {
-            throw new CouponBusinessRuleViolationException(
-                    format("A counter of coupon code: %s reached its maximum possible value: %s", coupon.getCode(), coupon.getCounter()),
-                    "Please use another coupon code to apply");
+            throw new CouponBusinessRuleViolationException(ERROR_COUPON_MAX_COUNTER_REACHED, coupon.getCode(), coupon.getCounter());
         }
     }
 
     private void verifRequestCountryOrigin(Coupon coupon, UserContext userContext) {
         if (coupon.getCountryCode() != null) {
             String requestOriginCountryCode = userContext.getRequestOriginCountryCode().orElseThrow(() -> new CouponBusinessRuleViolationException(
-                    format("Request origin country could not be determined when applying to coupon code: %s restricted to country code: %s", coupon.getCode(), coupon.getCountryCode()),
-                    "Please verify whether valid public ip is being used in your http request"));
+                    ERROR_COUNTRY_CODE_FOR_REQUEST_NOT_FOUND, coupon.getCode(), coupon.getCountryCode()));
             if (!coupon.getCountryCode().equalsIgnoreCase(requestOriginCountryCode)) {
-                throw new CouponBusinessRuleViolationException(format("Request origin country code: %s differs from coupon restricted country code: %s when applying to coupon code: %s",
-                        requestOriginCountryCode, coupon.getCountryCode(), coupon.getCode()),
-                        "Your public ip address must be in a country that this coupon is restricted to");
+                throw new CouponBusinessRuleViolationException(ERROR_COUPON_COUNTRY_CODE_RESTRICTED,
+                        requestOriginCountryCode, coupon.getCountryCode(), coupon.getCode());
             }
         }
     }

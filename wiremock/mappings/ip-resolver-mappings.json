@@ -1,0 +1,24 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathTemplate": "/ip-api/json/{ipaddr}",
+    "queryParameters": {
+      "fields": {
+        "equalTo": "countryCode,query"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "countryCode": "{{#if (matches request.path.ipaddr '^2.*')}}PL{{else}}UK{{/if}}",
+      "query": "{{request.path.ipaddr}}"
+    },
+    "transformers": [
+      "response-template"
+    ]
+  }
+}

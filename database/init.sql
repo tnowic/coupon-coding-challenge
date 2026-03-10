@@ -1,7 +1,7 @@
 DO $$
-    BEGIN
-        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'couponuser') THEN
-    CREATE ROLE couponuser LOGIN PASSWORD 'password';
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'couponuser') THEN
+        CREATE ROLE couponuser LOGIN PASSWORD 'couponpass';
     END IF;
 END $$;
 

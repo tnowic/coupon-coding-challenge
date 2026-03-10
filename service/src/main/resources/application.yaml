@@ -18,8 +18,9 @@ spring:
     validationQuery: SELECT 1
     driver-class-name: org.postgresql.Driver
 
-hibernate:
-  globally_quoted_identifiers: true
+retry:
+  maxAttempts: 3
+  maxDelay: 500
 
 server:
   port: ${SERVER_PORT}
@@ -43,4 +44,5 @@ logging:
             bind: trace
 
 ip-api:
-  url: http://ip-api.com/json
+  url: ${IP_API_URL}
+

@@ -19,7 +19,6 @@ public class UserContext {
     private final HttpServletRequest request;
     private final IpResolverService ipResolverService;
 
-
     public UserContext(HttpServletRequest request, IpResolverService ipResolverService) {
         this.request = request;
         this.ipResolverService = ipResolverService;
@@ -29,7 +28,7 @@ public class UserContext {
         return ipResolverService.getCountryCodeForIpAddr(extractIp(request));
     }
 
-    private String extractIp(HttpServletRequest request) {
+    String extractIp(HttpServletRequest request) {
         String xForwardedFor = request.getHeader("X-Forwarded-For");
         LOG.debug("X-Forwarded-For: {} " , xForwardedFor);
         return !StringUtils.isBlank(xForwardedFor) ? xForwardedFor.split(",")[0].trim() : request.getRemoteAddr();

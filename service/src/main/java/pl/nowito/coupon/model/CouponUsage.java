@@ -24,18 +24,6 @@ public class CouponUsage {
     @JoinColumn(name = "customer_id")
     private Customer customer;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Timestamp getCreateTimestamp() {
-        return createTimestamp;
-    }
-
     public void setCreateTimestamp(Timestamp createTimestamp) {
         this.createTimestamp = createTimestamp;
     }
@@ -46,10 +34,6 @@ public class CouponUsage {
 
     public void setCoupon(Coupon coupon) {
         this.coupon = coupon;
-    }
-
-    public Customer getCustomer() {
-        return customer;
     }
 
     public void setCustomer(Customer customer) {

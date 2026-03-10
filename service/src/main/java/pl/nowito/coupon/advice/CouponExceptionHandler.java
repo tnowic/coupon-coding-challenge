@@ -5,34 +5,49 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import pl.nowito.coupon.dto.ErrorResponse;
 import pl.nowito.coupon.error.CouponBusinessRuleViolationException;
 import pl.nowito.coupon.error.CouponNotFoundException;
+import pl.nowito.coupon.error.DuplicateCouponCodeException;
 
-import java.util.Map;
+import java.util.List;
 
 import static java.lang.String.format;
+import static pl.nowito.coupon.error.support.ErrorMessageSupportEnum.ERROR_COUPON_CODE_NOT_FOUND;
+import static pl.nowito.coupon.error.support.ErrorMessageSupportEnum.ERROR_DATA_INTEGRITY_VIOLATION;
 
 @ControllerAdvice
 public class CouponExceptionHandler {
 
-    private static final String ERROR_KEY = "error";
-    private static final String SUGGESTION_KEY = "suggestion";
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<Object> handleDataIntegrityViolationException(DataIntegrityViolationException e) {
-        return new ResponseEntity<>(Map.of(ERROR_KEY, format("Data integrity violation. %s", e.getMessage())), HttpStatus.CONFLICT);
-    }
-
-    @ExceptionHandler(CouponBusinessRuleViolationException.class)
-    public ResponseEntity<Object> handleBusinessRuleViolationException(CouponBusinessRuleViolationException e) {
-        return new ResponseEntity<>(Map.of(ERROR_KEY, format("Business rule violation. %s", e.getErrorMessage()),
-                SUGGESTION_KEY, e.getSuggestion()), HttpStatus.CONFLICT);
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolationException(DataIntegrityViolationException e) {
+        return new ResponseEntity<>(new ErrorResponse(
+                ERROR_DATA_INTEGRITY_VIOLATION.getErrorCode(),
+                List.of(),
+                format(ERROR_DATA_INTEGRITY_VIOLATION.getMsgTemplate(), e.getMessage()),
+                ERROR_DATA_INTEGRITY_VIOLATION.getSuggestion()),
+                HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(CouponNotFoundException.class)
-    public ResponseEntity<Object> handleCouponNotFoundException(CouponNotFoundException e) {
-        return new ResponseEntity<>(Map.of(ERROR_KEY, format("Coupon with code: %s not found" , e.getCode()),
-                        SUGGESTION_KEY, "Please check your code and try again"), HttpStatus.NOT_FOUND);
+    public ResponseEntity<ErrorResponse> handleCouponNotFoundException(CouponNotFoundException e) {
+        return new ResponseEntity<>(new ErrorResponse(
+                ERROR_COUPON_CODE_NOT_FOUND.getErrorCode(),
+                List.of(e.getCouponCode()),
+                format(ERROR_COUPON_CODE_NOT_FOUND.getMsgTemplate(), e.getCouponCode()),
+                ERROR_COUPON_CODE_NOT_FOUND.getSuggestion())
+                , HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(DuplicateCouponCodeException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateRequestException(DuplicateCouponCodeException e) {
+        return new ResponseEntity<>(new ErrorResponse(e.getErrorCode(), e.getParams(), e.getMessage(), e.getSuggestion()), HttpStatus.CONFLICT);
+    }
+
+
+    @ExceptionHandler(CouponBusinessRuleViolationException.class)
+    public ResponseEntity<ErrorResponse> handleBusinessRuleViolationException(CouponBusinessRuleViolationException e) {
+        return new ResponseEntity<>(new ErrorResponse(e.getErrorCode(), e.getParams(), e.getMessage(), e.getSuggestion()), HttpStatus.BAD_REQUEST);
+    }
 }

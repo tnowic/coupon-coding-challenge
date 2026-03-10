@@ -14,6 +14,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
+import pl.nowito.coupon.error.support.ErrorMessageSupportEnum;
 import pl.nowito.coupon.service.IpResolverService;
 
 import java.util.Optional;
@@ -150,6 +151,38 @@ class CouponServiceApplicationIT {
     }
 
     @Test
+    void testCouponCreationDuplicateCouponCode() {
+        String body = """
+                {
+                  "code": "MOJELATO27",
+                  "maxCounter": 44,
+                  "countryCode": "PL",
+                  "isForRegUsers": false
+                }
+                """;
+
+        with().body(body)
+                .contentType(ContentType.JSON)
+                .when()
+                .log().all()
+                .post();
+
+        with().body(body)
+                .contentType(ContentType.JSON)
+                .when()
+                .log().all()
+                .post()
+                .then()
+                .log().all()
+                .assertThat()
+                .statusCode(HttpStatus.CONFLICT.value())
+                .contentType(ContentType.JSON)
+                .body("errorCode", equalTo(ErrorMessageSupportEnum.ERROR_DUPLICATE_COUPON_CODE.getErrorCode()))
+                .body("errorMessage", equalTo("Business rule violation. Duplicate coupon code: MOJELATO27"))
+                .body("suggestion", equalTo("Please use another coupon code"));
+    }
+
+    @Test
     void testGetCoupon() {
         String body = """
                 {
@@ -195,7 +228,8 @@ class CouponServiceApplicationIT {
                 .assertThat()
                 .statusCode(HttpStatus.NOT_FOUND.value())
                 .contentType(ContentType.JSON)
-                .body("error", equalTo("Coupon with code: NieMaMnieTu not found"))
+                .body("errorCode", equalTo(ErrorMessageSupportEnum.ERROR_COUPON_CODE_NOT_FOUND.getErrorCode()))
+                .body("errorMessage", equalTo("Coupon code: NieMaMnieTu not found"))
                 .body("suggestion", equalTo("Please check your code and try again"));
     }
 
@@ -254,9 +288,10 @@ class CouponServiceApplicationIT {
                 .post(RestAssured.baseURI + "/ZIMA27/apply").then()
                 .log().all()
                 .assertThat()
-                .statusCode(HttpStatus.CONFLICT.value())
+                .statusCode(HttpStatus.BAD_REQUEST.value())
                 .contentType(ContentType.JSON)
-                .body("error", equalTo("Business rule violation. A counter of coupon code: ZIMA27 reached its maximum possible value: 2"))
+                .body("errorCode", equalTo(ErrorMessageSupportEnum.ERROR_COUPON_MAX_COUNTER_REACHED.getErrorCode()))
+                .body("errorMessage", equalTo("Business rule violation. A counter of coupon code: ZIMA27 reached its maximum possible value: 2"))
                 .body("suggestion", equalTo("Please use another coupon code to apply"));
     }
 
@@ -310,9 +345,10 @@ class CouponServiceApplicationIT {
                 .post(RestAssured.baseURI + "/NOWYROK/apply").then()
                 .log().all()
                 .assertThat()
-                .statusCode(HttpStatus.CONFLICT.value())
+                .statusCode(HttpStatus.BAD_REQUEST.value())
                 .contentType(ContentType.JSON)
-                .body("error", equalTo("Business rule violation. Coupon code: NOWYROK is available only for registered customers"))
+                .body("errorCode", equalTo(ErrorMessageSupportEnum.ERROR_COUPON_FOR_REGISTERED_USERS_ONLY.getErrorCode()))
+                .body("errorMessage", equalTo("Business rule violation. Coupon code: NOWYROK is available only for registered customers"))
                 .body("suggestion", equalTo("Please provide customer id in request body"));
 
         String nonExistedCustomerInApplyCouponRequest = """
@@ -328,9 +364,10 @@ class CouponServiceApplicationIT {
                 .post(RestAssured.baseURI + "/NOWYROK/apply").then()
                 .log().all()
                 .assertThat()
-                .statusCode(HttpStatus.CONFLICT.value())
+                .statusCode(HttpStatus.BAD_REQUEST.value())
                 .contentType(ContentType.JSON)
-                .body("error", equalTo("Business rule violation. Registered customer id: 999 not found"))
+                .body("errorCode", equalTo(ErrorMessageSupportEnum.ERROR_REGISTERED_CUSTOMER_NOT_FOUND.getErrorCode()))
+                .body("errorMessage", equalTo("Business rule violation. Registered customer id: 999 not found"))
                 .body("suggestion", equalTo("Please provide valid customer id in request body"));
 
     }
@@ -360,9 +397,10 @@ class CouponServiceApplicationIT {
                 .post(RestAssured.baseURI + "/MerryChristmas26/apply").then()
                 .log().all()
                 .assertThat()
-                .statusCode(HttpStatus.CONFLICT.value())
+                .statusCode(HttpStatus.BAD_REQUEST.value())
                 .contentType(ContentType.JSON)
-                .body("error", equalTo("Business rule violation. Request origin country code: PL differs from coupon restricted country code: UK when applying to coupon code: MERRYCHRISTMAS26"))
+                .body("errorCode", equalTo(ErrorMessageSupportEnum.ERROR_COUPON_COUNTRY_CODE_RESTRICTED.getErrorCode()))
+                .body("errorMessage", equalTo("Business rule violation. Request origin country code: PL differs from coupon restricted country code: UK when applying to coupon code: MERRYCHRISTMAS26"))
                 .body("suggestion", equalTo("Your public ip address must be in a country that this coupon is restricted to"));
 
         // country code for request origin cannot be resolved
@@ -375,9 +413,10 @@ class CouponServiceApplicationIT {
                 .post(RestAssured.baseURI + "/MERRYCHRISTMAS26/apply").then()
                 .log().all()
                 .assertThat()
-                .statusCode(HttpStatus.CONFLICT.value())
+                .statusCode(HttpStatus.BAD_REQUEST.value())
                 .contentType(ContentType.JSON)
-                .body("error", equalTo("Business rule violation. Request origin country could not be determined when applying to coupon code: MERRYCHRISTMAS26 restricted to country code: UK"))
+                .body("errorCode", equalTo(ErrorMessageSupportEnum.ERROR_COUNTRY_CODE_FOR_REQUEST_NOT_FOUND.getErrorCode()))
+                .body("errorMessage", equalTo("Business rule violation. Request origin country could not be determined when applying to coupon code: MERRYCHRISTMAS26 restricted to country code: UK"))
                 .body("suggestion", equalTo("Please verify whether valid public ip is being used in your http request"));
     }
 
@@ -429,9 +468,10 @@ class CouponServiceApplicationIT {
                 .post(RestAssured.baseURI + "/WielkaNoc2026/apply").then()
                 .log().all()
                 .assertThat()
-                .statusCode(HttpStatus.CONFLICT.value())
+                .statusCode(HttpStatus.BAD_REQUEST.value())
                 .contentType(ContentType.JSON)
-                .body("error", equalTo("Business rule violation. Customer with id: 1 has already applied coupon code: WIELKANOC2026"))
+                .body("errorCode", equalTo(ErrorMessageSupportEnum.ERROR_CUSTOMER_ALREADY_APPLIED_FOR_COUPON.getErrorCode()))
+                .body("errorMessage", equalTo("Business rule violation. Customer with id: 1 has already applied coupon code: WIELKANOC2026"))
                 .body("suggestion", equalTo("Please use other coupon code or choose different customer id"));
     }
 }
