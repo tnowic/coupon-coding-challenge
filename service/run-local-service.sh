@@ -8,6 +8,6 @@ done < ../.env
 #loacl postgres instance
 export POSTGRES_HOST=localhost
 #local wiremock instance for ip api
-#export IP_API_URL=http://localhost:8085/ip-api/json
+export IP_API_URL=http://localhost:8085/ip-api/json
 
 java -jar target/coupon-service.jar

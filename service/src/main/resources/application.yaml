@@ -23,7 +23,7 @@ retry:
   maxDelay: 500
 
 server:
-  port: ${SERVER_PORT}
+  port: 8080
   error:
     include-binding-errors: always
     include-message: always

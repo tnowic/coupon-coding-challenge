@@ -114,7 +114,7 @@ public class CouponService {
 
     Customer getCustomer(ApplyCouponRequest applyCouponRequest, Coupon coupon) {
         if (applyCouponRequest == null) {
-            throw new CouponBusinessRuleViolationException(ERROR_COUPON_FOR_REGISTERED_USERS_ONLY, coupon.getCode());
+            throw new CouponBusinessRuleViolationException(ERROR_COUPON_FOR_REGISTERED_CUSTOMERS_ONLY, coupon.getCode());
         }
         Optional<Customer> customerOptional = customerRepository.findById(applyCouponRequest.customerId());
         if (customerOptional.isEmpty()) {
@@ -130,12 +130,12 @@ public class CouponService {
     }
 
     void verifyCouponCounter(Coupon coupon) {
-        if (coupon.getCounter().equals(coupon.getMaxCounter())) {
+        if (coupon.getCounter().compareTo(coupon.getMaxCounter()) >= 0) {
             throw new CouponBusinessRuleViolationException(ERROR_COUPON_MAX_COUNTER_REACHED, coupon.getCode(), coupon.getCounter());
         }
     }
 
-    private void verifRequestCountryOrigin(Coupon coupon, UserContext userContext) {
+    void verifRequestCountryOrigin(Coupon coupon, UserContext userContext) {
         if (coupon.getCountryCode() != null) {
             String requestOriginCountryCode = userContext.getRequestOriginCountryCode().orElseThrow(() -> new CouponBusinessRuleViolationException(
                     ERROR_COUNTRY_CODE_FOR_REQUEST_NOT_FOUND, coupon.getCode(), coupon.getCountryCode()));

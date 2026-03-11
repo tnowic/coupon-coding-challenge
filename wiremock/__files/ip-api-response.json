@@ -1,0 +1,7 @@
+{
+{{
+  #unless (matches request.path.ipaddr '^3.*')}}
+"countryCode": "{{#if (matches request.path.ipaddr '^2.*')}}PL{{else}}UK{{/if}}",
+{{/unless}}
+"query": "{{request.path.ipaddr}}"
+}

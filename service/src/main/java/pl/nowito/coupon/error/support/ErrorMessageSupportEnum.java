@@ -3,7 +3,7 @@ package pl.nowito.coupon.error.support;
 public enum ErrorMessageSupportEnum {
 
     ERROR_COUPON_CODE_NOT_FOUND("Coupon code: %s not found", "Please check your code and try again"),
-    ERROR_COUPON_FOR_REGISTERED_USERS_ONLY("Coupon code: %s is available only for registered customers", "Please provide customer id in request body"),
+    ERROR_COUPON_FOR_REGISTERED_CUSTOMERS_ONLY("Coupon code: %s is available only for registered customers", "Please provide customer id in request body"),
     ERROR_REGISTERED_CUSTOMER_NOT_FOUND("Registered customer id: %d not found", "Please provide valid customer id in request body"),
     ERROR_CUSTOMER_ALREADY_APPLIED_FOR_COUPON("Customer with id: %s has already applied coupon code: %s", "Please use other coupon code or choose different customer id"),
     ERROR_COUPON_MAX_COUNTER_REACHED("A counter of coupon code: %s reached its maximum possible value: %s", "Please use another coupon code to apply"),

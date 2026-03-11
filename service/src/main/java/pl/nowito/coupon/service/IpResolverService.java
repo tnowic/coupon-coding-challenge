@@ -54,7 +54,6 @@ public class IpResolverService {
             LOG.warn("Exception thrown while retrieving country code for http request. Returning empty country code", e);
             return Optional.empty();
         }
-
     }
 
 }

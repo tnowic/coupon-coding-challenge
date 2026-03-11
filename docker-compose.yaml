@@ -17,9 +17,10 @@ services:
     container_name: wiremock-ip-resolver
     volumes:
       - ./wiremock/mappings:/home/wiremock/mappings
+      - ./wiremock/__files:/home/wiremock/__files
     ports:
       - "${WIREMOCK_PORT}:8080"
-    entrypoint: ["/docker-entrypoint.sh", "--global-response-templating", "--disable-gzip", "--verbose"]
+    entrypoint: [ "/docker-entrypoint.sh", "--global-response-templating", "--disable-gzip", "--verbose" ]
 
   backend:
     build:
@@ -31,7 +32,6 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://database:${POSTGRES_PORT}/${POSTGRES_DB}
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
-      - SERVER_PORT=${SERVER_PORT}
       - IP_API_URL=${IP_API_URL}
       - java.net.preferIPv4Stack=true
     depends_on:

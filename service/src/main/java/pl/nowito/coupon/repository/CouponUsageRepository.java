@@ -5,5 +5,5 @@ import pl.nowito.coupon.model.CouponUsage;
 
 public interface CouponUsageRepository extends JpaRepository<CouponUsage, Long> {
 
-   boolean existsByCouponIdAndCustomerId(Long couponId, Long customerId);
+    boolean existsByCouponIdAndCustomerId(Long couponId, Long customerId);
 }

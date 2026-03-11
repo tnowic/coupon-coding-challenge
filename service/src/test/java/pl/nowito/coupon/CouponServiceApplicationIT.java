@@ -32,7 +32,6 @@ class CouponServiceApplicationIT {
     @BeforeAll
     static void setup() {
         RestAssured.baseURI = "http://localhost/coupons";
-        RestAssured.port = 8080;
     }
 
     @Container
@@ -347,7 +346,7 @@ class CouponServiceApplicationIT {
                 .assertThat()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
                 .contentType(ContentType.JSON)
-                .body("errorCode", equalTo(ErrorMessageSupportEnum.ERROR_COUPON_FOR_REGISTERED_USERS_ONLY.getErrorCode()))
+                .body("errorCode", equalTo(ErrorMessageSupportEnum.ERROR_COUPON_FOR_REGISTERED_CUSTOMERS_ONLY.getErrorCode()))
                 .body("errorMessage", equalTo("Business rule violation. Coupon code: NOWYROK is available only for registered customers"))
                 .body("suggestion", equalTo("Please provide customer id in request body"));
 

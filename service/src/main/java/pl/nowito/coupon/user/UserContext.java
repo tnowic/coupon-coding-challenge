@@ -25,16 +25,14 @@ public class UserContext {
     }
 
     public Optional<String> getRequestOriginCountryCode() {
-        return ipResolverService.getCountryCodeForIpAddr(extractIp(request));
+        return ipResolverService.getCountryCodeForIpAddr(getIpFromRequest(request));
     }
 
-    String extractIp(HttpServletRequest request) {
+    String getIpFromRequest(HttpServletRequest request) {
+        // in case when this request is coming through a proxy or load balancer
         String xForwardedFor = request.getHeader("X-Forwarded-For");
-        LOG.debug("X-Forwarded-For: {} " , xForwardedFor);
+        LOG.debug("X-Forwarded-For: {}", xForwardedFor);
         return !StringUtils.isBlank(xForwardedFor) ? xForwardedFor.split(",")[0].trim() : request.getRemoteAddr();
     }
-
-
-
 
 }

@@ -28,6 +28,10 @@ public class CouponUsage {
         this.createTimestamp = createTimestamp;
     }
 
+    public Timestamp getCreateTimestamp() {
+        return createTimestamp;
+    }
+
     public Coupon getCoupon() {
         return coupon;
     }
@@ -38,5 +42,9 @@ public class CouponUsage {
 
     public void setCustomer(Customer customer) {
         this.customer = customer;
+    }
+
+    public Customer getCustomer() {
+        return customer;
     }
 }

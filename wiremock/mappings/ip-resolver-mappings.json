@@ -13,10 +13,7 @@
     "headers": {
       "Content-Type": "application/json"
     },
-    "jsonBody": {
-      "countryCode": "{{#if (matches request.path.ipaddr '^2.*')}}PL{{else}}UK{{/if}}",
-      "query": "{{request.path.ipaddr}}"
-    },
+    "bodyFileName": "ip-api-response.json",
     "transformers": [
       "response-template"
     ]
