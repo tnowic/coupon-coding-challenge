@@ -29,7 +29,7 @@ public class IpResolverService {
 
     public IpResolverService(ObjectMapper objectMapper,
                              RestTemplate restTemplate,
-                             @Value("${ip-api.url}") String ipApiUrl) {
+                             @Value("${ipapi.url}") String ipApiUrl) {
         this.objectMapper = objectMapper;
         this.restTemplate = restTemplate;
         this.ipApiUrl = ipApiUrl;

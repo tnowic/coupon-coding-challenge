@@ -32,7 +32,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://database:${POSTGRES_PORT}/${POSTGRES_DB}
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
-      - IP_API_URL=${IP_API_URL}
+      - IPAPI_URL=${IPAPI_URL:-http://ip-api.com/json}
       - java.net.preferIPv4Stack=true
     depends_on:
       - database

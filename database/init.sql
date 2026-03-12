@@ -39,7 +39,8 @@ CREATE TABLE IF NOT EXISTS coupons.coupon_usages
     "id" bigserial PRIMARY KEY,
     "create_timestamp" timestamp with time zone NOT NULL,
     "coupon_id" bigint REFERENCES coupons.coupons(id),
-    "customer_id" bigint REFERENCES coupons.customers(id)
+    "customer_id" bigint REFERENCES coupons.customers(id),
+    UNIQUE (coupon_id, customer_id)
 )
 TABLESPACE pg_default;
 

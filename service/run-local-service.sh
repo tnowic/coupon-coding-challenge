@@ -5,9 +5,10 @@ do
   export $line
 done < ../.env
 
-#loacl postgres instance
+# local postgres instance
 export POSTGRES_HOST=localhost
-#local wiremock instance for ip api
-export IP_API_URL=http://localhost:8085/ip-api/json
-
+# local wiremock instance for ip api
+export IPAPI_URL=http://localhost:8085/ip-api/json
+# by removing IPAPI_URL default url will be used
+#unset IPAPI_URL
 java -jar target/coupon-service.jar

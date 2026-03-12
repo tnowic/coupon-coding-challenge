@@ -43,6 +43,6 @@ logging:
           jdbc:
             bind: trace
 
-ip-api:
-  url: ${IP_API_URL}
+ipapi:
+  url: http://ip-api.com/json
 
