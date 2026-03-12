@@ -1,0 +1,163 @@
+{
+  "info": {
+    "_postman_id": "1fcec549-2097-48de-93f2-23ce386085f0",
+    "name": "coupon-challenge",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "12782528"
+  },
+  "item": [
+    {
+      "name": "Add coupon",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"Wiosna26\",\n  \"maxCounter\": 100,\n  \"countryCode\": \"PL\",\n  \"isForRegUsers\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/coupons",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "coupons"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get countryCode from wiremock",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8085/ip-api/json/217.119.72.129?fields=countryCode,query",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8085",
+          "path": [
+            "ip-api",
+            "json",
+            "217.119.72.129"
+          ],
+          "query": [
+            {
+              "key": "fields",
+              "value": "countryCode,query"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get coupon",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "http://localhost:8080/coupons/Wiosna26",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "coupons",
+            "Wiosna26"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Apply coupon by registered customer",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-Forwarded-For",
+            "value": "2.119.72.129",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"customerId\": 1\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/coupons/WIOSNA26/apply",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "coupons",
+            "WIOSNA26",
+            "apply"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get all coupons with pagination",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/coupons?page=0&size=2",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "coupons"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "0"
+            },
+            {
+              "key": "size",
+              "value": "2"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

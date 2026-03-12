@@ -1,0 +1,21 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathTemplate": "/ip-api/json/{ipaddr}",
+    "queryParameters": {
+      "fields": {
+        "equalTo": "countryCode,query"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "bodyFileName": "ip-api-response.json",
+    "transformers": [
+      "response-template"
+    ]
+  }
+}
