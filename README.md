@@ -37,7 +37,6 @@ Projekt składa się z trzech modułow:
 Moduł został napisany w języku Java z wykorzystaniem frameworku **spring boot**. Jest budowany z wykorzystaniem maven. Aplikacja wykorzystuje bazę Postgresql w celu przechowywania danych kuponów, ich wykorzystania i danych zarejestrowanych użytkowników. W celu identyfikacji kraju z jakiego pochodzą requesty HTTP dotyczące zaaplikowania kuponu wykorzystywany jest darmowy REST serwis [http://ip-api.com](http://ip-api.com). Istnieje również możliwość rekonfiguracji url służącego do pobrania kodu kraju na podstawie adresu ip z requestu HTTP poprzez parametr IPAPI_URL.
 
 Budowanie aplikacji z wykorzystaniem maven komendą:
-
 ```bash
 ./mvnw clean package
 ```
@@ -85,6 +84,7 @@ Stworzono definicję obrazu Docker bazy z wykorzystaniem pliku init.sql w pliku 
 Przegotowano proste skrypty shell do tworzenia obrazu: [docker-build-coupon-db.sh](./database/docker-build-coupon-db.sh) oraz uruchomienia bazy Postgresql jako kontenera Docker o nazwie **coupon-db**: [docker-run-coupon-db.sh](./database/docker-run-coupon-db.sh)
 
 **Moduł mocka serwisu IP API (wiremock)**  
+
 Zawiera konfigurację frameworka  [Wiremock](https://wiremock.org) który może być używany w celu zastąpienia obsługi wywołań zewnętrznego serwisu ip-api.com. Serwis ip-api.com służy do pobrania kodu kraju na podstawie adresu ip.
 
 Mock serwisu obsługuje endpoint:
@@ -100,6 +100,6 @@ Mock zakłada, że dla adresów ip {ipaddr}:
 
 Przygotowano prosty skrypt shell do uruchomienia mocka jako kontener w Docker o nazwie **wiremock-ip-resolver**: [docker-run-wiremock-ip-resolver.sh](./wiremock/docker-run-wiremock-ip-resolver.sh)
 
-Przykładowe testy API z wykorzystaniem mocka znajdują się w załączonej kolekcji Postman:
+Przykładowy test API z wykorzystaniem mocka znajduje się w załączonej kolekcji Postman:
 
 [coupon-challenge.postman_collection.json](./coupon-challenge.postman_collection.json)
