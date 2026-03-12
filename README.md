@@ -101,5 +101,4 @@ Mock zakłada, że dla adresów ip {ipaddr}:
 Przygotowano prosty skrypt shell do uruchomienia mocka jako kontener w Docker o nazwie **wiremock-ip-resolver**: [docker-run-wiremock-ip-resolver.sh](./wiremock/docker-run-wiremock-ip-resolver.sh)
 
 Przykładowy test API z wykorzystaniem mocka znajduje się w załączonej kolekcji Postman:
-
 [coupon-challenge.postman_collection.json](./coupon-challenge.postman_collection.json)
