@@ -100,5 +100,7 @@ Mock zakłada, że dla adresów ip {ipaddr}:
 
 Przygotowano prosty skrypt shell do uruchomienia mocka jako kontener w Docker o nazwie **wiremock-ip-resolver**: [docker-run-wiremock-ip-resolver.sh](./wiremock/docker-run-wiremock-ip-resolver.sh)
 
+Dodanie headera: **X-Forwarded-For** z wartością addresu IP do requestu http daje możliwość nadpisania adresu jaki zostanie w aplikacji uznany za adres pochodzenia requestu.
+
 Przykładowy test API z wykorzystaniem mocka znajduje się w załączonej kolekcji Postman:
 [coupon-challenge.postman_collection.json](./coupon-challenge.postman_collection.json)
