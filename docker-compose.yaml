@@ -33,7 +33,6 @@ services:
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
       - IPAPI_URL=${IPAPI_URL:-http://ip-api.com/json}
-      - java.net.preferIPv4Stack=true
     depends_on:
       - database
       - wiremock
