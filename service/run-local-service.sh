@@ -11,4 +11,4 @@ export POSTGRES_HOST=localhost
 export IPAPI_URL=http://localhost:8085/ip-api/json
 # by removing IPAPI_URL default url will be used
 #unset IPAPI_URL
-java -jar target/coupon-service.jar
+java -Djava.net.preferIPv4Stack=true -jar target/coupon-service.jar
