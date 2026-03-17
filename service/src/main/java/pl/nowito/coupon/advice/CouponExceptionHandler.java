@@ -13,8 +13,7 @@ import pl.nowito.coupon.error.DuplicateCouponCodeException;
 import java.util.List;
 
 import static java.lang.String.format;
-import static pl.nowito.coupon.error.support.ErrorMessageSupportEnum.ERROR_COUPON_CODE_NOT_FOUND;
-import static pl.nowito.coupon.error.support.ErrorMessageSupportEnum.ERROR_DATA_INTEGRITY_VIOLATION;
+import static pl.nowito.coupon.error.support.ErrorMessageSupportEnum.*;
 
 @ControllerAdvice
 public class CouponExceptionHandler {
@@ -49,5 +48,11 @@ public class CouponExceptionHandler {
     @ExceptionHandler(CouponBusinessRuleViolationException.class)
     public ResponseEntity<ErrorResponse> handleBusinessRuleViolationException(CouponBusinessRuleViolationException e) {
         return new ResponseEntity<>(new ErrorResponse(e.getErrorCode(), e.getParams(), e.getMessage(), e.getSuggestion()), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ErrorResponse> handleBRuntimeException(RuntimeException e) {
+        return new ResponseEntity<>(new ErrorResponse(INTERNAL_SERVER_ERROR.getErrorCode(), List.of(), INTERNAL_SERVER_ERROR.getMsgTemplate(), INTERNAL_SERVER_ERROR.getSuggestion()),
+                HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
