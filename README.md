@@ -42,7 +42,7 @@ Budowanie aplikacji z wykorzystaniem maven komendą:
 ```
 Budowanie z uruchamieniem testów integracyjnych:
 ```bash 
-./mvn clean verify 
+./mvnw clean verify 
 ```
 *(Z uwagi na to, że w testach integracyjnych użyto fameworku [Testcontainers](https://testcontainers.com/) musi istnieć obraz docker o nazwie coupon-db, dla którego tworzony jest kontener na czas trwania testów. Dla tych testów konieczne jest działanie bazy danych ze zdefiniowanymi zarejestrowanymi użytkownikami. Więcej informacji o kontenerze coupon-db znajduje się w opisie modułu bazy danych)*
 

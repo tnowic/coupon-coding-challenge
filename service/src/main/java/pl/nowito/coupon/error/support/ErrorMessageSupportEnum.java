@@ -10,7 +10,8 @@ public enum ErrorMessageSupportEnum {
     ERROR_COUNTRY_CODE_FOR_REQUEST_NOT_FOUND("Request origin country could not be determined when applying to coupon code: %s restricted to country code: %s", "Please verify whether valid public ip is being used in your http request"),
     ERROR_COUPON_COUNTRY_CODE_RESTRICTED("Request origin country code: %s differs from coupon restricted country code: %s when applying to coupon code: %s", "Your public ip address must be in a country that this coupon is restricted to"),
     ERROR_DUPLICATE_COUPON_CODE("Duplicate coupon code: %s", "Please use another coupon code"),
-    ERROR_DATA_INTEGRITY_VIOLATION("Data integrity violation. %s", "Please contact application support");
+    ERROR_DATA_INTEGRITY_VIOLATION("Data integrity violation. %s", "Please contact application support"),
+    INTERNAL_SERVER_ERROR("Internal server error occurred", "Please contact application support");
 
     private final String msgTemplate;
     private final String suggestion;
