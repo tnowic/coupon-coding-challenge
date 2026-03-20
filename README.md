@@ -1,106 +1,104 @@
+*[This document in Polish](README_pl.md)*
+# REST service for managing discount coupons
 
+## Project Description
 
-# Serwis REST do obsługi kuponów rabatowych
+REST service responsible for managing discount coupons.
 
-## Opis projektu
+The system provides the following functionalities:
 
-Serwis REST odpowiedzialny za zarządzanie kuponami rabatowymi.
+* registering a coupon's use by a user,
+* creating a new coupon (without authentication support)
 
-System udostępnia następujące funkcjonalności:
+Each coupon contains the following information:
 
-• rejestrację użycia kuponu przez użytkownika,    
-• tworzenie nowego kuponu (bez obsługi uwierzytelniania)
+* unique coupon code (up to 20 alphanumeric characters),
+* creation date,
+* maximum number of possible uses,
+* current number of uses,
+* country code for which the coupon is intended (optional field - no code means that a user from any country can apply this coupon)
+* availability for registered users only - a true/false flag indicates that the coupon is intended only for registered app users - their IDs must already exist in the database
 
-Każdy kupon zawiera następujące informacje:
+# Business Requirements Description:
 
-* unikalny kod kuponu (do 20 znaków alfanumerycznych),
-* datę utworzenia,
-* maksymalną liczbę możliwych użyć,
-* bieżącą liczbę użyć,
-* kod kraju, dla którego kupon jest przeznaczony (pole opcjonalne - brak kodu oznacza, że użytkownik z dowolnego kraju może zaaplikować ten kupon)
-* dostępność dla tyko dla zarejestrowanych użytkowników - flaga true/false oznaczająca, że kupon jest przeznaczony wyłącznie do zarejestrowanych użytkowników aplikacji - ich identyfikatory muszą już istnieć w bazie danych
+* The coupon code should be unique and case-insensitive.
+* The coupon should be limited to a maximum number of uses – first come, first served.
+* The country defined in the coupon restricts coupon use to users from that country (based on the HTTP request's IP address).
+* When the coupon has reached its maximum number of uses, attempts to use it result in an error with an appropriate message. The same applies if the coupon code does not exist, the attempted use is from a prohibited country, or the user has already used the coupon.
+* A user can only use the coupon once – the user ID of a user already defined in the database must be passed in the request.
 
-## Opis wymagań biznesowych:
+# Technical Description
 
-* Kod kuponu powinien być unikalny, wielkość znaków nie ma znaczenia
-* Wykorzystanie kuponu powinno być limitowane maksymalną liczbą użyć - kto pierwszy ten lepszy
-* Kraj zdefiniowany w kuponie ogranicza użycie kuponu tylko do osób z danego kraju (na podstawie adresu IP HTTP requestu).
-* Gdy kupon osiągnął maksymalną liczbę zużyć, próby użycia go kończą się błędem ze stosownym komunikatem. Tak samo, gdy podany kod kuponu nie istnieje, próba zużycia pochodzi z niedozwolonego kraju lub użytkownik zużył już dany kupon.
-* Jeden użytkownik może wykorzystać kupon tylko raz – identyfikator użytkownika zdefiniowanygo już w bazie danych musi być przekazany w requescie
+The project consists of three modules:
 
-## Opis techniczny
+**REST Service Module (service)**
 
-Projekt składa się z trzech modułow:
+The module was written in Java using the **Spring Boot** framework. It is built using Maven. The application uses a Postgresql database to store coupon data, coupon redemption data, and registered user data. The free REST service [http://ip-api.com](http://ip-api.com) is used to identify the country from which HTTP coupon requests originate. It is also possible to reconfigure the URL used to retrieve the country code based on the IP address from the HTTP request using the IPAPI_URL parameter.
 
-**Moduł serwisu REST (service)** 
-
-Moduł został napisany w języku Java z wykorzystaniem frameworku **spring boot**. Jest budowany z wykorzystaniem maven. Aplikacja wykorzystuje bazę Postgresql w celu przechowywania danych kuponów, ich wykorzystania i danych zarejestrowanych użytkowników. W celu identyfikacji kraju z jakiego pochodzą requesty HTTP dotyczące zaaplikowania kuponu wykorzystywany jest darmowy REST serwis [http://ip-api.com](http://ip-api.com). Istnieje również możliwość rekonfiguracji url służącego do pobrania kodu kraju na podstawie adresu ip z requestu HTTP poprzez parametr IPAPI_URL.
-
-Budowanie aplikacji z wykorzystaniem maven komendą:
+Building an application using maven with the command:
 ```bash
 ./mvnw clean package
 ```
-Budowanie z uruchamieniem testów integracyjnych:
+Building with integration tests running:
 ```bash 
 ./mvnw clean verify 
 ```
-*(Z uwagi na to, że w testach integracyjnych użyto fameworku [Testcontainers](https://testcontainers.com/) musi istnieć obraz docker o nazwie coupon-db, dla którego tworzony jest kontener na czas trwania testów. Dla tych testów konieczne jest działanie bazy danych ze zdefiniowanymi zarejestrowanymi użytkownikami. Więcej informacji o kontenerze coupon-db znajduje się w opisie modułu bazy danych)*
+*(Since the integration tests use the [Testcontainers](https://testcontainers.com/) famework, there must be a Docker image named coupon-db for which a container is created for the duration of the tests. For these tests, a database with defined registered users must be running. More information about the coupon-db container can be found in the description of the database module)*
 
-W celu uruchomienia aplikacji należy ustawić następujące zmienne środowiska:
-* POSTGRES_DB - definiuje nazwą bazy danych Postgres
-* POSTGRES_USER - definiuje użytkownika dostępowego do bazy danych
-* POSTGRES_PASSWORD - definiuje hasło dla użytkownika do bazy danych
-* POSTGRES_HOST - definiuje adres serwera bazy danych
-* POSTGRES_PORT - definiuje port na którym nasłuchuje baza danych
+To run the application, set the following environment variables:
+* POSTGRES_DB - defines the Postgres database name
+* POSTGRES_USER - defines the database username
+* POSTGRES_PASSWORD - defines the database username
+* POSTGRES_HOST - defines the database server address
+* POSTGRES_PORT - defines the port on which the database listens
 
-Przykładowe wartości zmiennych dla środowiska lokalnego znajdują się w pliku [.env](.env).  
-Do uruchomienia lokalnie aplikacji można wykorzystać przygotowany skrypt: [run-local-service.sh](./service/run-local-service.sh)
+Sample variable values for the local environment are included in the [.env](.env) file.
+To run the application locally, you can use the following script: [run-local-service.sh](./service/run-local-service.sh)
 
-Opcjonalnie istnieje możliwość uruchomienia serwisu jako kontenera w Docker o nazwie **coupon-service**. W tym celu przygotowano plik [Dockerfile](./service/Dockerfile). Przygotowano również proste skrypty shell w celu budowania obrazu: [docker-build-service.sh](./service/docker-build-service.sh) oraz uruchomienia kontenera: [docker-run-service.sh](./service/docker-run-service.sh)  
-W celu uruchomienia gotowego środowiska można również wykorzystać przygotowaną konfiguracje dla docker-compose [docker-compose](./docker-compose.yaml), która korzystana z predefiniowanych zmiennych środowiska z pliku [.env](.env). Komenda:
+Optionally, you can run the service as a Docker container called **coupon-service**. For this purpose, a [Dockerfile](./service/Dockerfile) file has been prepared. Simple shell scripts have also been prepared to build the image: [docker-build-service.sh](./service/docker-build-service.sh) and run the container: [docker-run-service.sh](./service/docker-run-service.sh).
+To run a ready-made environment, you can also use the prepared docker-compose configuration [docker-compose](./docker-compose.yaml), which uses predefined environment variables from the [.env](.env) file. Command:
 ```bash  
 docker-compose up
  ```
-Serwis udostępnia następujące endpointy
+The service provides the following endpoints:
 
-* POST /coupons   -  do tworzenia kuponu
-* GET /coupons/{code} - do pobrania danych kuponu z wybranym kodem
-* GET /coupons   -  do pobrania listy utworzonych kuponów (możliwość stronnicowania wyników w wykorzystaniem opcjonalnych parametrów 'page' i 'size')
-* POST /coupons/{code}/apply - zaaplikowanie kuponu z wybranym kodem przez użytkownika
+* POST /coupons - for creating a coupon
+* GET /coupons/{code} - for retrieving coupon data with a selected code
+* GET /coupons - for retrieving a list of created coupons (the results can be paginated using the optional 'page' and 'size' parameters)
+* POST /coupons/{code}/apply - for applying a coupon with a selected code by the user
 
-Szczegółowa dokumentacja API z wykorzystaniem swagger-ui dostępna jest po uruchomieniu aplikacji pod url:
+Detailed API documentation using swagger-ui is available after running the application at the following url:
 
 [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
 
-Przygotowano przykłady wykorzystania powyższych endpointów w załączonej kolekcji Postman:
+Examples of using the above endpoints have been prepared in the attached Postman collection:
 
 [coupon-challenge.postman_collection.json](./coupon-challenge.postman_collection.json)
 
-**Moduł bazy danych (database)**
+**Database Module (database)**
 
-Zawiera konfigurację dla bazy Postgresql. Definicja schematu bazy oraz użytkowników aplikacji znajduje się w pliku: [init.sql](database/init.sql)
+Contains configuration for the Postgresql database. The database schema and application users are defined in the file: [init.sql](database/init.sql)
 
-Stworzono definicję obrazu Docker bazy z wykorzystaniem pliku init.sql w pliku [Dockerfile](./database/Dockerfile).  
-Przegotowano proste skrypty shell do tworzenia obrazu: [docker-build-coupon-db.sh](./database/docker-build-coupon-db.sh) oraz uruchomienia bazy Postgresql jako kontenera Docker o nazwie **coupon-db**: [docker-run-coupon-db.sh](./database/docker-run-coupon-db.sh)
+A Docker image definition for the database was created using the init.sql file in the file [Dockerfile](./database/Dockerfile).
+Simple shell scripts were prepared for creating the image: [docker-build-coupon-db.sh](./database/docker-build-coupon-db.sh) and running the Postgresql database as a Docker container named **coupon-db**: [docker-run-coupon-db.sh](./database/docker-run-coupon-db.sh)
 
-**Moduł mocka serwisu IP API (wiremock)**  
+**IP API Service Mock Module (wiremock)**
 
-Zawiera konfigurację frameworka  [Wiremock](https://wiremock.org) który może być używany w celu zastąpienia obsługi wywołań zewnętrznego serwisu ip-api.com. Serwis ip-api.com służy do pobrania kodu kraju na podstawie adresu ip.
-
-Mock serwisu obsługuje endpoint:
+Contains the [Wiremock](https://wiremock.org) framework configuration, which can be used to replace the external ip-api.com service call handling. The ip-api.com service retrieves the country code based on the IP address.
+The mock service exposes the endpoint:
 ```bash  
 /ip-api/json/{ipaddr}?fields=countryCode,query
 ```
-zwracając tę samą strukturę danych w odpowiedzi co właściwy serwis ([patrz dokumentacja api](https://ip-api.com/docs/api:json))
+returning the same data structure in the response as the actual service([see documentation of the api](https://ip-api.com/docs/api:json))
 
-Mock zakłada, że dla adresów ip {ipaddr}:
-* rozpoczynających się od cyfry 3 - countryCode nie jest zwracany w odpowiedzi (odpowiada to przypadkowi, kiedy nie można określić kraju pochodzenia po danym adresie IP)
-* rozpoczynających się od cyfry 2 - zwraca countryCode: PL
-* rozpoczynających się od innych cyfr - zwraca countryCode: UK
+The mock assumes that for IP addresses {ipaddr}:
+* starting with the digit 3 - countryCode is not returned in the response (this corresponds to the case when the country of origin cannot be determined from a given IP address)
+* starting with the digit 2 - returns countryCode: PL
+* starting with other digits - returns countryCode: UK
 
-Przygotowano prosty skrypt shell do uruchomienia mocka jako kontener w Docker o nazwie **wiremock-ip-resolver**: [docker-run-wiremock-ip-resolver.sh](./wiremock/docker-run-wiremock-ip-resolver.sh)
+A simple shell script has been prepared to run the mock as a container in Docker called **wiremock-ip-resolver**: [docker-run-wiremock-ip-resolver.sh](./wiremock/docker-run-wiremock-ip-resolver.sh)
 
-Dodanie headera: **X-Forwarded-For** z wartością addresu IP do requestu http daje możliwość nadpisania adresu jaki zostanie w aplikacji uznany za adres pochodzenia requestu.
+Adding a header: **X-Forwarded-For** with the IP address value to the http request gives you the ability to overwrite the address that will be recognized in the application as the address of origin of the request.
 
-Przykładowy test API z wykorzystaniem mocka znajduje się w załączonej kolekcji Postman:
+An example API test using a mock can be found in the attached Postman collection:
 [coupon-challenge.postman_collection.json](./coupon-challenge.postman_collection.json)
